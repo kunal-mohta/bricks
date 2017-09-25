@@ -1,0 +1,31 @@
+body, html {
+  margin: 0;
+  top: 0;
+  left: 0;
+  height: 100%;
+  overflow: hidden; }
+
+#gamezone {
+  position: absolute;
+  left: 1vw;
+  top: 1vh;
+  height: 98vh;
+  width: 98vw;
+  overflow: hidden;
+  border: 1px solid black; }
+
+#slider {
+  position: absolute;
+  top: 95%;
+  height: 5%;
+  width: 20%;
+  background: black;
+  border-radius: 5%; }
+
+#ball {
+  height: 5vh;
+  width: 5vh;
+  border-radius: 5vh;
+  background: #656565; }
+
+/*# sourceMappingURL=style.css.map */
