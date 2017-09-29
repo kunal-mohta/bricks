@@ -4,9 +4,10 @@
 	<title></title>
 	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onmousemove = "sliding()">
+<body onmousemove = "sliding()" onload = "sliding()">
 	
-	<div id = "gamezone">
+	<div id = "gamezone" onclick = "game()">
+		<div id = "brick-container"></div>
 		<div id = "ball"></div>
 		<div id = "slider"></div>
 	</div>

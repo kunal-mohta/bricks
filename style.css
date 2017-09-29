@@ -23,9 +23,20 @@ body, html {
   border-radius: 5%; }
 
 #ball {
-  height: 5vh;
-  width: 5vh;
-  border-radius: 5vh;
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  border-radius: 30px;
   background: #656565; }
+
+#brick-container {
+  display: flex;
+  flex-wrap: wrap; }
+
+.brick {
+  height: 5vh;
+  width: 10vw;
+  background: red;
+  margin: 1vw 1vw 0 1vw; }
 
 /*# sourceMappingURL=style.css.map */
