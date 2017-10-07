@@ -1,3 +1,5 @@
+
+
 var slider = document.getElementById("slider");
 var gamezoneWidth = document.getElementById("gamezone").clientWidth;
 var gamezoneHeight = document.getElementById("gamezone").clientHeight;
@@ -5,7 +7,30 @@ var bodyWidth = document.body.clientWidth;
 var bodyHeight = document.body.clientHeight;
 var ball = document.getElementById("ball");
 var gamerunning = 0;//determines whether the game is running or not, initial value set to false
-var ballspeed = 2;
+var ballspeed = 2;//maybe given by the user or maybe increased as the game proceeds
+var bricknumber = 8;
+var currentAngle;
+var bricks = [];
+
+function brickmaking(){
+	//making all the bricks as objects
+	for(i=0;i<=(bricknumber - 1);i++){
+		var y = document.getElementById("brick-container").appendChild(document.createElement("div"));
+		y.setAttribute("class", "brick");
+
+	}
+	//setting the properties of all the bricks
+	for(i=0;i<=(bricknumber - 1);i++){
+		bricks[i] = {
+			element: document.getElementsByClassName("brick")[i],
+			left: document.getElementsByClassName("brick")[i].getBoundingClientRect().left,
+			right: (document.getElementsByClassName("brick")[i].getBoundingClientRect().left + document.getElementsByClassName("brick")[i].getBoundingClientRect().width),
+			top: document.getElementsByClassName("brick")[i].getBoundingClientRect().top,
+			bottom: (document.getElementsByClassName("brick")[i].getBoundingClientRect().top + document.getElementsByClassName("brick")[i].getBoundingClientRect().height),
+		}
+	}
+}
+brickmaking();
 
 //sliding of the slider along the mouse cursor
 function sliding(event){
@@ -23,47 +48,155 @@ function sliding(event){
 	}
 }
 
+
+
 function game(){
-	gamerunning = 1; //value set to true for whether game is running or not
 
-	var alltime = setInterval(function(){
-		var x = document.getElementById("ball").getBoundingClientRect().left;
-		var y = document.getElementById("ball").getBoundingClientRect().top;
-		console.log(x+","+y);
-	}, 1);
+	if(gamerunning == 1){return false;}//not allow further calling of click function when game is already running
 
-	//finding a random number between 45 and 135 for initial angle
-		var initialAngle;
-		function findIAngle(){
-			initialAngle = Math.random()*1000;
-			if(initialAngle > 135 || initialAngle < 45){
-				findIAngle();
+	else{
+		gamerunning = 1; //value set to true for whether game is running or not
+		
+
+		//finding a random number between 45 and 135 for initial angle
+			var initialAngle;
+			function findIAngle(){
+				initialAngle = Math.random()*1000;
+				if(initialAngle > 135 || initialAngle < 45){
+					findIAngle();
+				}
 			}
-		}
-		findIAngle();
+			findIAngle();
 
-	//initial fire
-	var move = 0;
-	var initialfire = setInterval(function(){
-		ball.style.transform = "rotateZ("+(-initialAngle)+"deg) translateX("+move+"px)";
-		move+=ballspeed;
-	}, 1);	
+		//initial fire
+		var move = 0;
+		var initialfire = setInterval(function(){
+			ball.style.transform = "rotateZ("+(-initialAngle)+"deg) translateX("+move+"px)";
+			move+=ballspeed;
+		}, 1);	
+	
+			//function occuring every 1 millisecond
+			var alltime = setInterval(function ingame(){
+				//getting real time position of the ball
+				var x = document.getElementById("ball").getBoundingClientRect().left;
+				var y = document.getElementById("ball").getBoundingClientRect().top;
 
-}
+				currentAngle = initialAngle;
+				//creating an object that manages all the rebound angles
+				var rebound = {
+					horizontalangle: (-currentAngle),
+					verticalangle: (180 - currentAngle),
+				}
+
+				//checking for collision with right or left wall
+				if(x>=((bodyWidth + gamezoneWidth)/2 - ball.getBoundingClientRect().width) || x<=((bodyWidth - gamezoneWidth)/2)){
+					if(x<=((bodyWidth - gamezoneWidth)/2)){
+						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width - 10)/2))+"px";
+					}
+					else{
+						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width + 10)/2))+"px";	
+					}
+					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+					ball.style.transform = "";
+					initialAngle = (rebound.verticalangle);
+					move = 0;
+				}
+
+				//checking collision with the floor
+				else if(y>=((bodyHeight + gamezoneHeight)/2)){
+					ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+					ball.style.transform = "";
+					move = 0;
+					clearInterval(alltime);
+					clearInterval(initialfire);
+					var restart = confirm("gameover, replay?");
+
+					if(restart == 1){
+						location.reload();
+					}
+					else{
+						alert("In the name Father, Son and the Holy Spirit, I condemn you to play forever");
+						location.reload();
+					}
+				}
+
+				//checking collision with the slider
+				else if(y>=((bodyHeight + gamezoneHeight)/2 - slider.getBoundingClientRect().height - ball.getBoundingClientRect().height +20) && x<=(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width) && x>(slider.getBoundingClientRect().left - ball.getBoundingClientRect().width + 1)){
+					ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+					ball.style.transform = "";
+					move = 0;
+					initialAngle = rebound.horizontalangle;
+				}
+
+				//checking collision with the roof
+				else if(y<=((bodyHeight - gamezoneHeight)/2)){
+					ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2) + 5)+"px";
+					ball.style.transform = "";
+					move = 0;
+					initialAngle = rebound.horizontalangle;
+				}
+
+				//checking collision with any brick
+				else
+				{
+					var brickcount = 0;
+					for(i=0;i<=(bricknumber - 1);i++){
+
+						//checking collision from below the brick
+						if(x>=(bricks[i].left-ball.getBoundingClientRect().width) && x <= bricks[i].right && y <= bricks[i].bottom && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
+							bricks[i].element.style.opacity = "0";
+							ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+							ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+							ball.style.transform = "";
+							initialAngle = (rebound.horizontalangle);
+							move = 0;
+							break;
+						}
+
+						//checking collision from the side
+						else if(y>=bricks[i].top && y<=bricks[i].bottom && x==(bricks[i].left - ball.getBoundingClientRect().width) && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
+							bricks[i].element.style.opacity = "0";
+							ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+							ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+							ball.style.transform = "";
+							initialAngle = (rebound.verticalangle);
+							move = 0;
+							console.log("abs");
+							break;	
+						}//not working!!!!!!!
 
 
+						//counting number of bricks destroyed
+						if(window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") == 0){
+							brickcount++;
+						}
 
-var bricks = [];
-for(i=0;i<=15;i++){
-	var y = document.getElementById("brick-container").appendChild(document.createElement("div"));
-	y.setAttribute("class", "brick");
-
-}
-for(i=0;i<=15;i++){
-	bricks[i] = {
-		left: document.getElementsByClassName("brick")[i].getBoundingClientRect().left
+					}
+					//checking whether player has won
+					if(brickcount == bricknumber){
+						clearTimeout(alltime);
+						clearTimeout(initialfire);
+						
+						var restart = confirm("You won, play again?");
+						if(restart == 1){
+							location.reload();
+						}
+						else{
+							alert("In the name Father, Son and the Holy Spirit, I condemn you to play forever");
+							location.reload();
+						}
+					}
+				}
+			},1);
 	}
 }
+
+
+
+
 
 
 
