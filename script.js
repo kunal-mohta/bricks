@@ -8,7 +8,7 @@ var bodyHeight = document.body.clientHeight;
 var ball = document.getElementById("ball");
 var gamerunning = 0;//determines whether the game is running or not, initial value set to false
 var ballspeed = 2;//maybe given by the user or maybe increased as the game proceeds
-var bricknumber = 8;
+var bricknumber = 32;
 var currentAngle;
 var bricks = [];
 
@@ -67,7 +67,7 @@ function game(){
 				}
 			}
 			findIAngle();
-
+			initialAngle = 120;
 		//initial fire
 		var move = 0;
 		var initialfire = setInterval(function(){
@@ -77,26 +77,35 @@ function game(){
 	
 			//function occuring every 1 millisecond
 			var alltime = setInterval(function ingame(){
+				console.log(initialAngle);
 				//getting real time position of the ball
 				var x = document.getElementById("ball").getBoundingClientRect().left;
 				var y = document.getElementById("ball").getBoundingClientRect().top;
 
 				currentAngle = initialAngle;
 				//creating an object that manages all the rebound angles
-				var rebound = {
-					horizontalangle: (-currentAngle),
-					verticalangle: (180 - currentAngle),
+				if(currentAngle>0){
+					var rebound = {
+						horizontalangle: (-currentAngle),
+						verticalangle: (180 - currentAngle),
+					}
+				}
+				else{
+					var rebound = {
+						horizontalangle: (-currentAngle),
+						verticalangle: (-180 - currentAngle),
+					}
 				}
 
 				//checking for collision with right or left wall
 				if(x>=((bodyWidth + gamezoneWidth)/2 - ball.getBoundingClientRect().width) || x<=((bodyWidth - gamezoneWidth)/2)){
 					if(x<=((bodyWidth - gamezoneWidth)/2)){
-						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width - 10)/2))+"px";
+						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2 - 4.8))+"px";
 					}
 					else{
-						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width + 10)/2))+"px";	
+						ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2 + 4.8))+"px";	
 					}
-					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+					ball.style.top = (y)+"px";
 					ball.style.transform = "";
 					initialAngle = (rebound.verticalangle);
 					move = 0;
@@ -122,12 +131,37 @@ function game(){
 				}
 
 				//checking collision with the slider
-				else if(y>=((bodyHeight + gamezoneHeight)/2 - slider.getBoundingClientRect().height - ball.getBoundingClientRect().height +20) && x<=(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width) && x>(slider.getBoundingClientRect().left - ball.getBoundingClientRect().width + 1)){
+				else if(y>=((bodyHeight + gamezoneHeight)/2 - slider.getBoundingClientRect().height - ball.getBoundingClientRect().height + 10) && x<=(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width) && x>(slider.getBoundingClientRect().left - ball.getBoundingClientRect().width + 1)){
+					
 					ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
 					ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
 					ball.style.transform = "";
 					move = 0;
-					initialAngle = rebound.horizontalangle;
+
+					//collision at the right end of the slider
+					if(x>=(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width*0.8)){
+						initialAngle = 30;
+					}
+
+					//collision at the left end of the slider
+					else if(x<(slider.getBoundingClientRect().left - ball.getBoundingClientRect().width + slider.getBoundingClientRect().width*0.2)){
+						initialAngle = 150;
+					}
+
+					//collision at the middle part of the slider
+					else if(x<=(slider.getBoundingClientRect().left - ball.getBoundingClientRect().width + slider.getBoundingClientRect().width*0.7) && x>=(slider.getBoundingClientRect().left + slider.getBoundingClientRect().width*0.3)){
+						console.log("abs");
+						if(initialAngle < -90){
+							initialAngle = 100;
+						}
+						else{
+							initialAngle = 80;
+						}
+					}
+
+					else{
+						initialAngle = rebound.horizontalangle;
+					}
 				}
 
 				//checking collision with the roof
@@ -145,8 +179,19 @@ function game(){
 					var brickcount = 0;
 					for(i=0;i<=(bricknumber - 1);i++){
 
+						//checking collision from the side
+						if(y>=bricks[i].top && y<(bricks[i].bottom-4) && x>=(bricks[i].left - ball.getBoundingClientRect().width) && x<=(bricks[i].right) && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
+							bricks[i].element.style.opacity = "0";
+							ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
+							ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
+							ball.style.transform = "";
+							initialAngle = (rebound.verticalangle);
+							move = 0;
+							break;	
+						}//not working!!!!!!!
+
 						//checking collision from below the brick
-						if(x>=(bricks[i].left-ball.getBoundingClientRect().width) && x <= bricks[i].right && y <= bricks[i].bottom && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
+						else if(x>=(bricks[i].left-ball.getBoundingClientRect().width) && x <= bricks[i].right && y <= bricks[i].bottom && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
 							bricks[i].element.style.opacity = "0";
 							ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
 							ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
@@ -156,17 +201,6 @@ function game(){
 							break;
 						}
 
-						//checking collision from the side
-						else if(y>=bricks[i].top && y<=bricks[i].bottom && x==(bricks[i].left - ball.getBoundingClientRect().width) && window.getComputedStyle(bricks[i].element).getPropertyValue("opacity") != 0){
-							bricks[i].element.style.opacity = "0";
-							ball.style.left = (x - ((bodyWidth - document.getElementById("gamezone").getBoundingClientRect().width)/2))+"px";
-							ball.style.top = (y - ((bodyHeight - document.getElementById("gamezone").getBoundingClientRect().height)/2))+"px";
-							ball.style.transform = "";
-							initialAngle = (rebound.verticalangle);
-							move = 0;
-							console.log("abs");
-							break;	
-						}//not working!!!!!!!
 
 
 						//counting number of bricks destroyed
@@ -192,7 +226,18 @@ function game(){
 				}
 			},1);
 	}
+	
+	//increasing the speed of the ball to a certain threshold
+	var increase_speed = setInterval(function(){
+		ballspeed+=0.1;
+		if(ballspeed >= 5){
+			clearTimeout(increase_speed);
+		}
+	}, 1000);
 }
+
+
+
 
 
 
