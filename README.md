@@ -13,3 +13,6 @@ Noticeable features of the game:-
 
 ![ss1](https://raw.githubusercontent.com/kunal-mohta/bricks/master/screenshots/ss1.png)
 ![ss2](https://raw.githubusercontent.com/kunal-mohta/bricks/master/screenshots/ss2.png)
+
+
+`Status: Currently functional on Google Chrome`
